@@ -3,6 +3,7 @@ from torchsummary import summary
 import torch
 
 from data import get_train_test_dataloader
+from loss import depth_loss
 
 BATCH_SIZE = 1
 
@@ -22,13 +23,11 @@ Y = batch['depth']
 print(f"X batch shape: {X.size()}")
 print(f"Y batch shape: {Y.size()}")
 
-# img = X[0]
-# label = Y[0]
-# plt.imshow(img.permute((1, 2, 0)), cmap="gray")
-# plt.show()
-
 output = model(X)
 print(output.shape)
 
-plt.imshow(output[0].detach().permute((1, 2, 0)))
+loss = depth_loss(output, Y)
+print(f'loss: {loss}')
+
+plt.imshow(output[0].detach().permute((1, 2, 0)), cmap='YlOrRd')
 plt.show()

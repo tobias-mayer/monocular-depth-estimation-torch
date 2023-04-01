@@ -36,8 +36,10 @@ class TensorFromPIL(object):
         print(input)
         image, depth = input['image'], input['depth']
 
+        depth = depth.resize((320, 240))
+
         image = transforms.ToTensor()(image)
-        depth = transforms.ToTensor()(depth).squeeze()
+        depth = transforms.ToTensor()(depth)
 
         return { 'image': image, 'depth': depth }
 

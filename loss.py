@@ -1,4 +1,4 @@
-imoprt torch
+import torch
 import torch.nn.functional as F
 
 def _compute_image_gradient(img):
@@ -59,7 +59,6 @@ def _l_grad(y_pred, y):
     return torch.mean(torch.abs(dy_pred - dy_true) + torch.abs(dx_pred - dx_true), axis=-1)
 
 def _l_ssim(img1, img2, window_size=11, sigma=1.5, L=1):
-def ssim():
     '''
     Compute the Structural Similarity Index Measure (SSIM) between two images.
     Arguments:

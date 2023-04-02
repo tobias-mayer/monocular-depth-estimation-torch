@@ -56,7 +56,7 @@ def _l_grad(y_pred, y):
     dy_pred, dx_pred = _compute_image_gradient(y_pred)
 
     # Compute the L1 loss between the gradients
-    return torch.mean(torch.abs(dy_pred - dy_true) + torch.abs(dx_pred - dx_true), axis=-1)
+    return torch.mean(torch.abs(dy_pred - dy_true) + torch.abs(dx_pred - dx_true))
 
 def _l_ssim(img1, img2, window_size=11, sigma=1.5, L=1):
     '''
@@ -103,13 +103,16 @@ def depth_loss(y_pred, y, lam=0.1):
     '''
     # Compute the L1 loss between the predicted and ground truth images, scaled by lam
     l1_loss = lam * _l_depth(y_pred, y)
+    print(f'l1: {l1_loss}')
 
     # Compute the L1 loss between the gradients of the predicted and ground truth images
     grad_loss = _l_grad(y_pred, y)
+    print(f'grad: {grad_loss}')
 
     # Compute the structural similarity index (SSIM) between the predicted and ground truth images
     ssim_loss = _l_ssim(y_pred, y)
+    print(f'ssim: {ssim_loss}')
 
     # Compute the weighted sum of the three loss terms
-    return torch.mean(l1_loss + grad_loss + ssim_loss)
+    return l1_loss + grad_loss + ssim_loss
 

@@ -111,5 +111,5 @@ def depth_loss(y_pred, y, lam=0.1):
     ssim_loss = _l_ssim(y_pred, y)
 
     # Compute the weighted sum of the three loss terms
-    return l1_loss + grad_loss + ssim_loss
+    return torch.mean(l1_loss + grad_loss + ssim_loss)
 

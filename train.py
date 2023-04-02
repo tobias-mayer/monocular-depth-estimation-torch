@@ -1,3 +1,5 @@
+import argparse
+
 from model import *
 from torchsummary import summary
 import torch
@@ -5,29 +7,46 @@ import torch
 from data import get_train_test_dataloader
 from loss import depth_loss
 
-BATCH_SIZE = 1
-
 # device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 device = torch.device('cpu')
 
-model = Model().to(device)
+def train(batch_size, epochs, learning_rate):
+    model = Model().to(device)
 
-train_loader, test_loader = get_train_test_dataloader(1)
+    train_loader, test_loader = get_train_test_dataloader(batch_size)
+    print(len(train_loader))
 
+    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
-import matplotlib.pyplot as plt
+    for epoch in range(epochs):
+        model.train()
+        N = len(train_loader)
 
-batch = next(iter(train_loader))
-X = batch['image']
-Y = batch['depth']
-print(f"X batch shape: {X.size()}")
-print(f"Y batch shape: {Y.size()}")
+        for i, batch in enumerate(train_loader):
+            optimizer.zero_grad()
 
-output = model(X)
-print(output.shape)
+            images = batch['image'].to(device)
+            depth_maps = batch['depth'].to(device)
 
-loss = depth_loss(output, Y)
-print(f'loss: {loss}')
+            # todo: normalize and clip depth
 
-plt.imshow(output[0].detach().permute((1, 2, 0)), cmap='YlOrRd')
-plt.show()
+            y_pred = model(images)
+
+            loss = depth_loss(y_pred, depth_maps)
+            loss.backward()
+            optimizer.step()
+
+            if i % 5 == 0:
+                print('Epoch: [{0}][{1}/{2}]'.format(epoch, i, N))
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-bs', '--batch-size', default=4, type=int, help='batch size')
+    parser.add_argument('-e', '--epochs', default=20, type=int, help='total number of epochs')
+    parser.add_argument('-lr', '--learning-rate', default=0.0001, type=float, help='initial learning rate')
+    args = parser.parse_args()
+
+    train(args.batch_size, args.epochs, args.learning_rate)
+
+if __name__ == '__main__':
+    main()

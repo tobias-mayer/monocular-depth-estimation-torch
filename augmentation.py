@@ -53,7 +53,7 @@ class TensorFromPIL(object):
     """Converts a PIL image and depth map to PyTorch tensors.
 
     This class resizes the depth map to a fixed size of (320, 240) and converts
-    both the image and depth map to PyTorch tensors.
+    both the image and depth map to PyTorch tensors. The depth values are clamped into the inclusive range [10, 1000]
 
     Args:
         None
@@ -70,8 +70,24 @@ class TensorFromPIL(object):
         image = transforms.ToTensor()(image)
         depth = transforms.ToTensor()(depth)
 
+        depth = torch.clamp(depth, 10, 1000)
+
         return { 'image': image, 'depth': depth }
 
+
+def normalize_depth(depth, max_depth=1000.0):
+    """
+    Returns the normalized depth value. This is used because we want to compute
+    a higher loss to areas that are closer to the camera.
+
+    Args:
+        depth (float): The depth value to be normalized.
+        max_depth (float, optional): The maximum depth value. Defaults to 1000.0.
+
+    Returns:
+        float: The normalized depth value.
+    """
+    return max_depth / depth
 
 def train_transform():
     # Defines the transformation pipeline for training data

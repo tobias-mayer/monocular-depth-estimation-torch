@@ -6,6 +6,7 @@ import torch
 
 from data import get_train_test_dataloader
 from loss import depth_loss
+from augmentation import normalize_depth
 
 # device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 device = torch.device('cpu')
@@ -27,12 +28,13 @@ def train(batch_size, epochs, learning_rate):
 
             images = batch['image'].to(device)
             depth_maps = batch['depth'].to(device)
+            normalized_depth_maps = normalize_depth(depth_maps)
 
             # todo: normalize and clip depth
 
             y_pred = model(images)
 
-            loss = depth_loss(y_pred, depth_maps)
+            loss = depth_loss(y_pred, normalized_depth_maps)
             loss.backward()
             optimizer.step()
 

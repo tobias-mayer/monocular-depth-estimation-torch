@@ -8,6 +8,7 @@ import torch
 from data import get_train_test_dataloader
 from loss import depth_loss
 from augmentation import normalize_depth
+from util import AvgTracker
 
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
@@ -19,7 +20,7 @@ def train(batch_size, epochs, learning_rate, checkpoint_path):
         checkpoint = torch.load(checkpoint_path)
         model.load_state_dict(checkpoint['model_state_dict'])
         optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-        start_epoch = checkpoint['epoch']
+        start_epoch = checkpoint['epoch'] + 1
     else:
         start_epoch = 0
 
@@ -28,6 +29,8 @@ def train(batch_size, epochs, learning_rate, checkpoint_path):
     for epoch in range(start_epoch, epochs):
         model.train()
         N = len(train_loader)
+
+        loss_tracker = AvgTracker()
 
         for i, batch in enumerate(train_loader):
             optimizer.zero_grad()
@@ -41,11 +44,15 @@ def train(batch_size, epochs, learning_rate, checkpoint_path):
             y_pred = model(images)
 
             loss = depth_loss(y_pred, normalized_depth_maps)
+            print(loss)
+            loss_tracker.update(loss.data.item(), images.size(0))
             loss.backward()
             optimizer.step()
 
             if i % 5 == 0:
-                print('Epoch: [{0}][{1}/{2}]'.format(epoch, i, N))
+                print('Epoch: [{0}][{1}/{2}]\t'
+                      'Loss {loss.val:.4f} ({loss.avg:.4f})'
+                      .format(epoch, i, N, loss=loss_tracker))
 
         torch.save({
             'epoch': epoch,

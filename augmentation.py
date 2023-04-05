@@ -2,6 +2,8 @@ import torch
 from torchvision import transforms
 import random
 
+device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+
 class RandomHorizontalFlip(object):
     """Randomly flips the input image horizontally with a given probability.
 
@@ -67,9 +69,8 @@ class TensorFromPIL(object):
         depth = depth.resize((320, 240))
         
         # Converts the image and depth map to PyTorch tensors
-        image = transforms.ToTensor()(image)
-        depth = transforms.ToTensor()(depth)
-
+        image = transforms.ToTensor()(image).to(device)
+        depth = transforms.ToTensor()(depth).to(device)
         depth = torch.clamp(depth, 10, 1000)
 
         return { 'image': image, 'depth': depth }

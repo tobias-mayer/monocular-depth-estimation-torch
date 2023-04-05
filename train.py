@@ -12,6 +12,7 @@ from util import AvgTracker
 
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
+
 def train(batch_size, epochs, learning_rate, checkpoint_path):
     model = Model().to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
@@ -33,10 +34,10 @@ def train(batch_size, epochs, learning_rate, checkpoint_path):
         loss_tracker = AvgTracker()
 
         for i, batch in enumerate(train_loader):
-            optimizer.zero_grad()
+            optimizer.zero_grad(set_to_none=True)
 
-            images = batch['image'].to(device)
-            depth_maps = batch['depth'].to(device)
+            images = batch['image']
+            depth_maps = batch['depth']
             normalized_depth_maps = normalize_depth(depth_maps)
 
             # todo: normalize and clip depth
@@ -44,7 +45,6 @@ def train(batch_size, epochs, learning_rate, checkpoint_path):
             y_pred = model(images)
 
             loss = depth_loss(y_pred, normalized_depth_maps)
-            print(loss)
             loss_tracker.update(loss.data.item(), images.size(0))
             loss.backward()
             optimizer.step()
@@ -62,13 +62,14 @@ def train(batch_size, epochs, learning_rate, checkpoint_path):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-bs', '--batch-size', default=4, type=int, help='batch size')
+    parser.add_argument('-bs', '--batch-size', default=8, type=int, help='batch size')
     parser.add_argument('-e', '--epochs', default=20, type=int, help='total number of epochs')
     parser.add_argument('-lr', '--learning-rate', default=0.0001, type=float, help='initial learning rate')
-    parser.add_argument('-cp', '--checkpoint-path', default='', type=str, help='path where checkpoints are stored and loaded')
+    parser.add_argument('-cp', '--checkpoint-path', default='checkpoint.tar', type=str, help='path where checkpoints are stored and loaded')
     args = parser.parse_args()
 
     train(args.batch_size, args.epochs, args.learning_rate, args.checkpoint_path)
 
 if __name__ == '__main__':
+    torch.multiprocessing.set_start_method('spawn')
     main()
